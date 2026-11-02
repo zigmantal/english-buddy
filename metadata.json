@@ -1,0 +1,7 @@
+{
+  "name": "English Buddy",
+  "description": "An interactive English learning app for 5th graders, focusing on vocabulary and speaking skills through AI-powered conversations.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

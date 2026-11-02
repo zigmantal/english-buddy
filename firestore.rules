@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.email == 'zigman.tal@gmail.com' &&
+             request.auth.token.email_verified == true;
+    }
+    
+    function isAllowedEmail() {
+      return isAuthenticated() && 
+             request.auth.token.email in [
+               'zigman.tal@gmail.com', 
+               'noamzigman7@gmail.com', 
+               'nirhoffman@gmail.com',
+               'danielle.zigman@gmail.com', 
+               'yafitz583@gmail.com',
+               'oshimron@gmail.com'
+             ];
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId && isAllowedEmail();
+    }
+    
+    function isValidExam(data) {
+      return data.keys().hasOnly(['id', 'title', 'words', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.words is list && data.words.size() > 0;
+    }
+
+    function isValidVocabList(data) {
+      return data.keys().hasOnly(['id', 'title', 'words', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.words is list && data.words.size() > 0;
+    }
+
+    function isValidUser(data) {
+      let allowedFields = [
+        'uid', 'email', 'totalScore', 'struggledWords', 'lastSessionDate',
+        'dailyScore', 'dailyPracticeCount', 'allTimePracticeCount', 'lastPracticeDate'
+      ];
+      return data.keys().hasOnly(allowedFields) &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             (!('totalScore' in data) || data.totalScore is number) &&
+             (!('dailyScore' in data) || data.dailyScore is number) &&
+             (!('dailyPracticeCount' in data) || data.dailyPracticeCount is number) &&
+             (!('allTimePracticeCount' in data) || data.allTimePracticeCount is number) &&
+             (!('struggledWords' in data) || data.struggledWords is list) &&
+             (!('lastSessionDate' in data) || data.lastSessionDate is string) &&
+             (!('lastPracticeDate' in data) || data.lastPracticeDate is string);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data);
+      allow delete: if isAdmin(); // Only admins can delete profiles if needed
+
+      match /exams/{examId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidExam(request.resource.data);
+        allow update: if isOwner(userId) && isValidExam(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /vocabLists/{listId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidVocabList(request.resource.data);
+        allow update: if isOwner(userId) && isValidVocabList(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

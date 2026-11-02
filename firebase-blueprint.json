@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user progress and metadata.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "totalScore": { "type": "number", "description": "The user's total score across all sessions." },
+        "dailyScore": { "type": "number", "description": "The user's score for the current day." },
+        "dailyPracticeCount": { "type": "number", "description": "The number of words practiced today." },
+        "allTimePracticeCount": { "type": "number", "description": "The total number of words practiced ever." },
+        "struggledWords": { "type": "array", "items": { "type": "string" }, "description": "A list of words the user struggled with." },
+        "lastSessionDate": { "type": "string", "format": "date-time", "description": "The date of the user's last session." },
+        "lastPracticeDate": { "type": "string", "format": "date", "description": "The last date the user practiced, used to reset daily stats." }
+      },
+      "required": ["uid", "email"]
+    },
+    "Exam": {
+      "title": "Custom Exam",
+      "description": "A user-created exam with a title and a list of words.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "words": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "words"]
+    },
+    "VocabList": {
+      "title": "Custom Vocabulary List",
+      "description": "A user-created vocabulary list for 5th grade practice.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "words": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "words"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document."
+    },
+    "/users/{userId}/exams/{examId}": {
+      "schema": "Exam",
+      "description": "A user's custom created exam."
+    },
+    "/users/{userId}/vocabLists/{listId}": {
+      "schema": "VocabList",
+      "description": "A user's custom created vocabulary list."
+    }
+  }
+}
